@@ -75,7 +75,7 @@ class Discriminator(nn.Module):
 
 class VanillaGAN():
     def __init__(self, generator, discriminator, noise_fn, data_fn,
-                 batch_size=32, device='cpu', lr_d=1e-3, lr_g=1e-4):
+                 batch_size=32, device='cpu', lr_d=1e-3, lr_g=2e-4):
         """A GAN class for holding and training a generator and discriminator
 
         params:
@@ -95,8 +95,10 @@ class VanillaGAN():
         self.batch_size = batch_size
         self.device = device
         self.criterion = nn.BCELoss()
-        self.optim_d = optim.Adam(discriminator.parameters(), lr=lr_d)
-        self.optim_g = optim.Adam(generator.parameters(), lr=lr_g)
+        self.optim_d = optim.Adam(discriminator.parameters(),
+                                  lr=lr_d, betas=(0.5, 0.999))
+        self.optim_g = optim.Adam(generator.parameters(),
+                                  lr=lr_g, betas=(0.5, 0.999))
         self.target_ones = torch.ones((batch_size, 1)).to(device)
         self.target_zeros = torch.zeros((batch_size, 1)).to(device)
 
