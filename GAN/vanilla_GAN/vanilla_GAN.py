@@ -74,7 +74,8 @@ class Discriminator(nn.Module):
 
 
 class VanillaGAN():
-    def __init__(self, generator, discriminator, noise_fn, data_fn, batch_size=32, device='cpu'):
+    def __init__(self, generator, discriminator, noise_fn, data_fn,
+                 batch_size=32, device='cpu', lr_d=1e-3, lr_g=1e-4):
         """A GAN class for holding and training a generator and discriminator
 
         params:
@@ -94,8 +95,8 @@ class VanillaGAN():
         self.batch_size = batch_size
         self.device = device
         self.criterion = nn.BCELoss()
-        self.optim_d = optim.Adam(discriminator.parameters(), lr=2e-3)
-        self.optim_g = optim.Adam(generator.parameters(), lr=4e-5)
+        self.optim_d = optim.Adam(discriminator.parameters(), lr=lr_d)
+        self.optim_g = optim.Adam(generator.parameters(), lr=lr_g)
         self.target_ones = torch.ones((batch_size, 1)).to(device)
         self.target_zeros = torch.zeros((batch_size, 1)).to(device)
 
@@ -132,16 +133,19 @@ class VanillaGAN():
         """Train the discriminator one step and return the losses."""
         self.generator.zero_grad()
         self.discriminator.zero_grad()
+
         # real samples
         real_samples = self.data_fn(self.batch_size)
         pred_real = self.discriminator(real_samples)
         loss_real = self.criterion(pred_real, self.target_ones)
+
         # generated samples
         latent_vec = self.noise_fn(self.batch_size)
         with torch.no_grad():
             fake_samples = self.generator(latent_vec)
         pred_fake = self.discriminator(fake_samples)
         loss_fake = self.criterion(pred_fake, self.target_zeros)
+
         # combine
         loss = loss_real + loss_fake
         loss.backward()
@@ -153,3 +157,34 @@ class VanillaGAN():
         loss_d = self.train_step_discriminator()
         loss_g = self.train_step_generator()
         return loss_g, loss_d
+
+
+def main():
+    from time import time
+    epochs = 100
+    batches = 100
+    generator = Generator(1, [64, 32, 16, 1])
+    discriminator = Discriminator(1, [64, 32, 16, 1])
+    noise_fn = lambda x: torch.rand((x, 1), device='cpu')
+    data_fn = lambda x: torch.randn((x, 1), device='cpu')
+    gan = VanillaGAN(generator, discriminator, noise_fn, data_fn, device='cpu')
+    loss_g, loss_d_real, loss_d_fake = [], [], []
+    start = time()
+    for epoch in range(epochs):
+        loss_g_running, loss_d_real_running, loss_d_fake_running = 0, 0, 0
+        for batch in range(batches):
+            lg_, (ldr_, ldf_) = gan.train_step()
+            loss_g_running += lg_
+            loss_d_real_running += ldr_
+            loss_d_fake_running += ldf_
+        loss_g.append(loss_g_running / batches)
+        loss_d_real.append(loss_d_real_running / batches)
+        loss_d_fake.append(loss_d_fake_running / batches)
+        print(f"Epoch {epoch+1}/{epochs} ({int(time() - start)}s):"
+              f" G={loss_g[-1]:.3f},"
+              f" Dr={loss_d_real[-1]:.3f},"
+              f" Df={loss_d_fake[-1]:.3f}")
+
+
+if __name__ == "__main__":
+    main()
