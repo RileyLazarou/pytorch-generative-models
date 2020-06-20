@@ -165,8 +165,8 @@ def main():
     from time import time
     epochs = 100
     batches = 100
-    generator = Generator(1, [64, 32, 16, 1])
-    discriminator = Discriminator(1, [64, 32, 16, 1])
+    generator = Generator(1, 64, 32, 1])
+    discriminator = Discriminator(1, 64, 32, 1])
     noise_fn = lambda x: torch.rand((x, 1), device='cpu')
     data_fn = lambda x: torch.randn((x, 1), device='cpu')
     gan = VanillaGAN(generator, discriminator, noise_fn, data_fn, device='cpu')
