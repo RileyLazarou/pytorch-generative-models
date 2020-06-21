@@ -16,9 +16,9 @@ class Generator(nn.Module):
         super(Generator, self).__init__()
         self.latent_dim = latent_dim
         self.output_activation = output_activation
-        self._define_layers(layers)
+        self._init_layers(layers)
 
-    def _define_layers(self, layers):
+    def _init_layers(self, layers):
         """Initialize the layers and store as self.module_list."""
         self.module_list = nn.ModuleList()
         last_layer = self.latent_dim
@@ -51,9 +51,9 @@ class Discriminator(nn.Module):
         """
         super(Discriminator, self).__init__()
         self.input_dim = input_dim
-        self._define_layers(layers)
+        self._init_layers(layers)
 
-    def _define_layers(self, layers):
+    def _init_layers(self, layers):
         """Initialize the layers and store as self.module_list."""
         self.module_list = nn.ModuleList()
         last_layer = self.input_dim
@@ -165,8 +165,8 @@ def main():
     from time import time
     epochs = 100
     batches = 100
-    generator = Generator(1, 64, 32, 1])
-    discriminator = Discriminator(1, 64, 32, 1])
+    generator = Generator(1, [64, 32, 1])
+    discriminator = Discriminator(1, [64, 32, 1])
     noise_fn = lambda x: torch.rand((x, 1), device='cpu')
     data_fn = lambda x: torch.randn((x, 1), device='cpu')
     gan = VanillaGAN(generator, discriminator, noise_fn, data_fn, device='cpu')
