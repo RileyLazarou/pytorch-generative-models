@@ -121,7 +121,6 @@ class VanillaGAN():
     def train_step_generator(self):
         """Train the generator one step and return the loss."""
         self.generator.zero_grad()
-        self.discriminator.zero_grad()
 
         latent_vec = self.noise_fn(self.batch_size)
         generated = self.generator(latent_vec)
@@ -133,7 +132,6 @@ class VanillaGAN():
 
     def train_step_discriminator(self):
         """Train the discriminator one step and return the losses."""
-        self.generator.zero_grad()
         self.discriminator.zero_grad()
 
         # real samples
@@ -149,7 +147,7 @@ class VanillaGAN():
         loss_fake = self.criterion(pred_fake, self.target_zeros)
 
         # combine
-        loss = loss_real + loss_fake
+        loss = (loss_real + loss_fake) / 2
         loss.backward()
         self.optim_d.step()
         return loss_real.item(), loss_fake.item()
