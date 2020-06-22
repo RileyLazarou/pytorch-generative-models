@@ -4,11 +4,10 @@ import torch.optim as optim
 
 
 class Generator(nn.Module):
-    """Generator network for a GAN."""
     def __init__(self, latent_dim, layers, output_activation=None):
-        """A generator for mapping samples a latent space to a sample space.
+        """A generator for mapping a latent space to a sample space.
 
-        params:
+        Args:
             latent_dim (int): latent dimension ("noise vector")
             layers (List[int]): A list of layer widths including output width
             output_activation: torch activation function or None
@@ -78,13 +77,15 @@ class VanillaGAN():
                  batch_size=32, device='cpu', lr_d=1e-3, lr_g=2e-4):
         """A GAN class for holding and training a generator and discriminator
 
-        params:
+        Args:
             generator: a Ganerator network
             discriminator: A Discriminator network
-            noise_fn: function f(num: int) -> pytorch tensor, latent vectors
-            data_fn: function f(num: int) -> pytorch tensor, real samples
+            noise_fn: function f(num: int) -> pytorch tensor, (latent vectors)
+            data_fn: function f(num: int) -> pytorch tensor, (real samples)
             batch_size: training batch size
             device: cpu or CUDA
+            lr_d: learning rate for the discriminator
+            lr_g: learning rate for the generator
         """
         self.generator = generator
         self.generator = self.generator.to(device)
@@ -105,7 +106,7 @@ class VanillaGAN():
     def generate_samples(self, latent_vec=None, num=None):
         """Sample from the generator.
 
-        params:
+        Args:
             latent_vec: A pytorch latent vector or None
             num: The number of samples to generate if latent_vec is None
 
