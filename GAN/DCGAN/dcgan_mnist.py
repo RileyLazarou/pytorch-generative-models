@@ -2,7 +2,7 @@ import os
 
 import torch
 from torch import nn
-import torch.optim as optim
+from torch import optim
 import torchvision as tv
 from torchvision.datasets import ImageFolder
 from torch.utils.data import DataLoader
@@ -22,13 +22,13 @@ class Generator(nn.Module):
         super(Generator, self).__init__()
         self.latent_dim = latent_dim
         self.batchnorm = batchnorm
-        self._init_layers()
+        self._init_modules()
 
-    def _init_layers(self):
-        """Initialize the layers."""
+    def _init_modules(self):
+        """Initialize the modules."""
         # Project the input
-        self.linear1 = nn.Linear(self.latent_dim, 7*7*256, bias=False)
-        self.bn1d1 = nn.BatchNorm1d(7*7*256) if self.batchnorm else None
+        self.linear1 = nn.Linear(self.latent_dim, 256*7*7, bias=False)
+        self.bn1d1 = nn.BatchNorm1d(256*7*7) if self.batchnorm else None
         self.leaky_relu = nn.LeakyReLU()
 
         # Convolutions
@@ -59,7 +59,6 @@ class Generator(nn.Module):
                 bias=False)
         self.tanh = nn.Tanh()
 
-
     def forward(self, input_tensor):
         """Forward pass; map latent vectors to samples."""
         intermediate = self.linear1(input_tensor)
@@ -88,19 +87,13 @@ class Discriminator(nn.Module):
         """A discriminator for discerning real from generated images.
 
         Images must be single-channel and 28x28 pixels.
-
-        params:
-            input_dim (int): width of the input
-            layers (List[int]): A list of layer widths including output width
-
         Output activation is Sigmoid.
         """
         super(Discriminator, self).__init__()
-        self._init_layers()  # I know this is overly-organized. Fight me.
+        self._init_modules()  # I know this is overly-organized. Fight me.
 
-    def _init_layers(self):
-        """Initialize the layers."""
-        # Convolutions
+    def _init_modules(self):
+        """Initialize the modules."""
         self.conv1 = nn.Conv2d(
                 in_channels=1,
                 out_channels=64,
@@ -137,8 +130,6 @@ class Discriminator(nn.Module):
         output_tensor = self.sigmoid(intermediate)
 
         return output_tensor
-
-
 
 
 class DCGAN():
@@ -261,7 +252,7 @@ def main():
     from time import time
     batch_size = 32
     epochs = 100
-    latent_dim = 100
+    latent_dim = 16
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     transform = tv.transforms.Compose([
             tv.transforms.Grayscale(num_output_channels=1),
@@ -277,9 +268,11 @@ def main():
             shuffle=True,
             num_workers=2
             )
-    noise_fn = lambda x: torch.rand((x, latent_dim), device=device)
+    noise_fn = lambda x: torch.randn((x, latent_dim), device=device)
     gan = DCGAN(latent_dim, noise_fn, dataloader, device=device)
+    start = time()
     for i in range(10):
+        print(f"Epoch {i+1}; Elapsed time = {int(time() - start)}s")
         gan.train_epoch()
     images = gan.generate_samples() * -1
     ims = tv.utils.make_grid(images, normalize=True)
