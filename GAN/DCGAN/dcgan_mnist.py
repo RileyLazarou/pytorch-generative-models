@@ -269,12 +269,12 @@ def main():
             num_workers=2
             )
     noise_fn = lambda x: torch.randn((x, latent_dim), device=device)
-    gan = DCGAN(latent_dim, noise_fn, dataloader, device=device)
+    gan = DCGAN(latent_dim, noise_fn, dataloader, device=device, batch_size=batch_size)
     start = time()
     for i in range(10):
         print(f"Epoch {i+1}; Elapsed time = {int(time() - start)}s")
         gan.train_epoch()
-    images = gan.generate_samples() * -1
+    images = gan.generate_samples() * -1  # invert colours, for aesthetics
     ims = tv.utils.make_grid(images, normalize=True)
     plt.imshow(ims.numpy().transpose((1,2,0)))
     plt.show()
